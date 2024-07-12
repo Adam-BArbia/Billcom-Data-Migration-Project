@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YAML Config Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>YAML Config Generator</h1>
+        <form id="configForm">
+            <h2>MySQL Configuration</h2>
+            <div class="form-group">
+                <label for="mysqlHost">Host</label>
+                <input type="text" id="mysqlHost" required>
+            </div>
+            <div class="form-group">
+                <label for="mysqlUser">User</label>
+                <input type="text" id="mysqlUser" required>
+            </div>
+            <div class="form-group">
+                <label for="mysqlPassword">Password</label>
+                <input type="password" id="mysqlPassword" required>
+            </div>
+            <div class="form-group">
+                <label for="mysqlDatabase">Database</label>
+                <input type="text" id="mysqlDatabase" required>
+            </div>
+
+            <h2>Logging Configuration</h2>
+            <div class="form-group">
+                <label for="loggingConfigFile">Config File</label>
+                <input type="text" id="loggingConfigFile" required>
+            </div>
+
+            <h2>Paths</h2>
+            <div class="form-group">
+                <label for="sqlScript">SQL Script</label>
+                <input type="text" id="sqlScript" required>
+            </div>
+            <div class="form-group">
+                <label for="csvOutputDirectory">CSV Output Directory</label>
+                <input type="text" id="csvOutputDirectory" required>
+            </div>
+
+            <h2>Default Values</h2>
+            <div class="form-group">
+                <label for="defaultEmail">Email</label>
+                <input type="email" id="defaultEmail" required>
+            </div>
+            <div class="form-group">
+                <label for="defaultPhoneNumber">Phone Number</label>
+                <input type="text" id="defaultPhoneNumber" required>
+            </div>
+            <div class="form-group">
+                <label for="defaultDob">Date of Birth</label>
+                <input type="date" id="defaultDob" required>
+            </div>
+
+            <h2>ETL Configuration</h2>
+            <div class="form-group">
+                <label for="chunkNumber">Chunk Number</label>
+                <input type="number" id="chunkNumber" required>
+            </div>
+            <div class="form-group">
+                <label for="totalSize">Total Size</label>
+                <input type="number" id="totalSize" required>
+            </div>
+            <div class="form-group">
+                <label for="processes">Processes</label>
+                <input type="number" id="processes" required>
+            </div>
+            <div class="form-group">
+                <label for="inputFiles">Input Files (comma-separated)</label>
+                <textarea id="inputFiles" rows="3" required></textarea>
+            </div>
+
+            <button type="submit">Generate YAML</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('configForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const config = {
+                mysql: {
+                    host: document.getElementById('mysqlHost').value,
+                    user: document.getElementById('mysqlUser').value,
+                    password: document.getElementById('mysqlPassword').value,
+                    database: document.getElementById('mysqlDatabase').value
+                },
+                logging: {
+                    config_file: document.getElementById('loggingConfigFile').value
+                },
+                paths: {
+                    sql_script: document.getElementById('sqlScript').value,
+                    csv_output_directory: document.getElementById('csvOutputDirectory').value
+                },
+                default: {
+                    email: document.getElementById('defaultEmail').value,
+                    phone_number: document.getElementById('defaultPhoneNumber').value,
+                    dob: document.getElementById('defaultDob').value
+                },
+                etl: {
+                    chunk_number: parseInt(document.getElementById('chunkNumber').value, 10),
+                    total_size: parseInt(document.getElementById('totalSize').value, 10),
+                    processes: parseInt(document.getElementById('processes').value, 10)
+                },
+                input_files: document.getElementById('inputFiles').value.split(',').map(file => file.trim())
+            };
+
+            const loggingConfig = {
+                version: 1,
+                disable_existing_loggers: false,
+                formatters: {
+                    standard: {
+                        format: "%(asctime)s - %(levelname)s - %(message)s"
+                    }
+                },
+                handlers: {
+                    console: {
+                        class: "logging.StreamHandler",
+                        formatter: "standard",
+                        level: "DEBUG",
+                        stream: "ext://sys.stdout"
+                    },
+                    file: {
+                        class: "logging.FileHandler",
+                        formatter: "standard",
+                        level: "DEBUG",
+                        filename: "logs/etl_process.log"
+                    }
+                },
+                loggers: {
+                    my_logger: {
+                        level: "DEBUG",
+                        handlers: ["console", "file"],
+                        propagate: false
+                    }
+                },
+                root: {
+                    level: "DEBUG",
+                    handlers: ["console", "file"]
+                }
+            };
+
+            const configYaml = YAML.stringify(config, 2);
+            const loggingConfigYaml = YAML.stringify(loggingConfig, 2);
+
+            const configBlob = new Blob([configYaml], { type: 'text/yaml' });
+            const loggingConfigBlob = new Blob([loggingConfigYaml], { type: 'text/yaml' });
+
+            const configLink = document.createElement('a');
+            configLink.href = URL.createObjectURL(configBlob);
+            configLink.download = 'config.yaml';
+            configLink.click();
+
+            const loggingConfigLink = document.createElement('a');
+            loggingConfigLink.href = URL.createObjectURL(loggingConfigBlob);
+            loggingConfigLink.download = 'logging_config.yaml';
+            loggingConfigLink.click();
+        });
+
+        // Simple YAML Stringify function
+        const YAML = {
+            stringify: (obj, indent = 0) => {
+                let yamlStr = '';
+                for (const key in obj) {
+                    if (typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+                        yamlStr += ' '.repeat(indent) + key + ':\n';
+                        yamlStr += YAML.stringify(obj[key], indent + 2);
+                    } else if (Array.isArray(obj[key])) {
+                        yamlStr += ' '.repeat(indent) + key + ':\n';
+                        obj[key].forEach(item => {
+                            yamlStr += ' '.repeat(indent + 2) + '- ' + item + '\n';
+                        });
+                    } else {
+                        yamlStr += ' '.repeat(indent) + key + ': ' + obj[key] + '\n';
+                    }
+                }
+                return yamlStr;
+            }
+        };
+    </script>
+</body>
+</html>
