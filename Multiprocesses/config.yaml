@@ -9,7 +9,7 @@ logging:
   config_file: "logs/logging_config.yaml"
 
 paths:
-  sql_script: "MAIN TABLE.sql"
+  #sql_script: "MAIN TABLE.sql"
   csv_output_directory: "directory/"
 
 default:
@@ -23,27 +23,3 @@ etl:
 
 input_directory: directory/
 output_cvs: 'filtered_output.csv'
-
-#test1: 
-  #input size: 1000000
-  #time: 17m 35.502s
-  # Fetures: 
-    #cvs_filter.py filtered_output.csv : 1
-    #cvs_filter.py deleting runtime files in csv_output_directory: 0
-    #extract.py dynamic input size : 0
-
-#test2:
-  #input size: 1000
-  #time: 9.627s
-  # Fetures: 
-    #cvs_filter.py filtered_output.csv : 1
-    #cvs_filter.py deleting runtime files in csv_output_directory: 1
-    #extract.py dynamic input size : 0
-
-#test3: 
-  #input size: 1000000
-  #time: 33m 38.882s
-  # Fetures: 
-    #cvs_filter.py filtered_output.csv : 1
-    #cvs_filter.py deleting runtime files in csv_output_directory: 1
-    #extract.py dynamic input size : 1

@@ -1,6 +1,7 @@
 import re as rx
 import pandas as pd
 import random
+from datetime import datetime
 
 def is_valid_regex(parameter, typ):
     regex_patterns = {
@@ -10,6 +11,13 @@ def is_valid_regex(parameter, typ):
         "dob": r'^\d{4}-\d{2}-\d{2}$'
     }
     return bool(rx.match(regex_patterns.get(typ, ''), parameter))
+
+def is_logically_valid_dob(dob):
+    try:
+        datetime.strptime(dob, '%Y-%m-%d')
+        return True
+    except ValueError:
+        return False
 
 def correct_email(email):
     if "@" not in email:
@@ -37,8 +45,12 @@ def correct_phone_number(phone_number):
 
 def correct_dob(dob):
     if rx.match(r'^\d{2}-\d{2}-\d{4}$', dob):
-        return '-'.join(reversed(dob.split('-'))), "correctable"
+        corrected_dob = '-'.join(reversed(dob.split('-')))
+        if is_logically_valid_dob(corrected_dob):
+            return corrected_dob, "correctable"
     return "1970-01-01", "non-correctable"
+
+
 
 # o
 #  \_/\o
@@ -59,7 +71,7 @@ def validate_and_correct_data(df):
         email, phone, dob = row['email'], row['phone_number'], row['date_of_birth']
         valid_email, email_status = (email, "valid") if is_valid_regex(email, "email") else correct_email(email)
         valid_phone, phone_status = (phone, "valid") if is_valid_regex(phone, "phone") else correct_phone_number(phone)
-        valid_dob, dob_status = (dob, "valid") if is_valid_regex(dob, "dob") else correct_dob(dob)
+        valid_dob, dob_status = (dob, "valid") if is_valid_regex(dob, "dob") and is_logically_valid_dob(dob) else correct_dob(dob)
         return valid_email, email_status, valid_phone, phone_status, valid_dob, dob_status
     
     corrections = df.apply(apply_corrections, axis=1, result_type='expand')

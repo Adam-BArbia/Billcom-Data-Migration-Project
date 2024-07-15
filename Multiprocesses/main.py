@@ -7,7 +7,7 @@ from modules.extract import extract_data_chunk
 from modules.transform import transform_data_chunk
 from modules.load import load_data_chunk
 from modules.database import connect_to_mysql
-from modules.cvs_filter import lauch_filter
+from Multiprocesses.modules.csv_filter import lauch_filter  
 
 def get_total_rows(conn, config):
     cursor = conn.cursor()
@@ -38,7 +38,6 @@ def run_etl_process(task_queues, done_event, config, conn_pool, chunk_size):
     # Ensure connection is closed before the worker terminates
     if conn:
         conn.close()
-
 
 #                 _  _
 #                | )/ )
@@ -110,4 +109,3 @@ if __name__ == "__main__":
 
     # Run the filter function after all ETL processes are done
     lauch_filter()
-
