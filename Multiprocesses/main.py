@@ -2,12 +2,13 @@ import argparse
 import yaml
 import multiprocessing
 import logging as log
+import os
 from modules.logging_config import configure_logging
 from modules.extract import extract_data_chunk
 from modules.transform import transform_data_chunk
 from modules.load import load_data_chunk
 from modules.database import connect_to_mysql
-from Multiprocesses.modules.csv_filter import lauch_filter  
+from modules.csv_filter import lauch_filter  
 
 def get_total_rows(conn, config):
     cursor = conn.cursor()
@@ -38,6 +39,13 @@ def run_etl_process(task_queues, done_event, config, conn_pool, chunk_size):
     # Ensure connection is closed before the worker terminates
     if conn:
         conn.close()
+
+def cleanup(directory):
+    loger = log.getLogger(__name__)
+    for filename in os.listdir(directory):
+        if filename.startswith(('transform_chunk_')):
+            os.remove(os.path.join(directory, filename))
+            loger.info(f"Removed temporary file: {filename}")
 
 #                 _  _
 #                | )/ )
@@ -106,6 +114,11 @@ if __name__ == "__main__":
         p.join()
 
     log.info("All tasks completed")
-
+    # Run the filter function after all ETL processes are done
+    log.info("Starting filtering process")
     # Run the filter function after all ETL processes are done
     lauch_filter()
+    log.info("Filtering process completed")
+
+    # Cleanup: remove intermediate files
+    cleanup(config['paths']['csv_output_directory'])
